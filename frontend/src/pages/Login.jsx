@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import { Building2, LogIn, Eye, EyeOff, Loader2, AlertCircle } from 'lucide-react';
+import { Building2, LogIn, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 
 const Login = () => {
   const { login, loading } = useAuth();
@@ -33,7 +33,16 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center hero-bg py-12 px-4">
+    <div className="min-h-screen flex items-center justify-center hero-bg py-12 px-4 relative">
+      {/* Back button */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors"
+      >
+        <ArrowLeft size={16} />
+        Back to Home
+      </Link>
+
       {/* Background blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-blue-600/8 blur-3xl" />
@@ -127,12 +136,6 @@ const Login = () => {
               )}
             </button>
           </form>
-
-          {/* Demo credentials hint */}
-          <div className="mt-5 p-3 bg-blue-600/8 border border-blue-500/20 rounded-xl text-xs text-slate-400">
-            <p className="font-medium text-slate-300 mb-1">Demo account</p>
-            <p>Register a new account to get started — it's free!</p>
-          </div>
         </div>
 
         <p className="text-center text-sm text-slate-500 mt-6">
