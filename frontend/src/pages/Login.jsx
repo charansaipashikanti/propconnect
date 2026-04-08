@@ -33,16 +33,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center hero-bg py-12 px-4 relative">
-      {/* Back button */}
-      <Link
-        to="/"
-        className="absolute top-6 left-6 md:top-8 md:left-8 flex items-center gap-2 text-sm font-medium text-slate-400 hover:text-white transition-colors"
-      >
-        <ArrowLeft size={16} />
-        Back to Home
-      </Link>
-
+    <div className="min-h-screen flex items-center justify-center hero-bg py-12 px-4">
       {/* Background blobs */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-blue-600/8 blur-3xl" />
