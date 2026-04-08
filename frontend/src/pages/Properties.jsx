@@ -63,8 +63,15 @@ const Properties = () => {
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
-    setAppliedFilters(newFilters);
   };
+
+  // Debounce the filters: wait 500ms after the user stops interacting before hitting the backend
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setAppliedFilters(filters);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [filters]);
 
   const handleReset = () => {
     setFilters(defaultFilters);
