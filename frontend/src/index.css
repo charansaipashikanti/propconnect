@@ -102,6 +102,7 @@
     align-items: center;
     gap: 0.5rem;
     font-size: 0.875rem;
+    justify-content: center;
   }
 
   .btn-primary:hover {
@@ -134,6 +135,7 @@
     gap: 0.5rem;
     font-size: 0.875rem;
     backdrop-filter: blur(8px);
+    justify-content: center;
   }
 
   .btn-secondary:hover {
@@ -306,4 +308,8 @@
   50% {
     opacity: 0.6;
   }
+}
+
+:focus-visible {
+  outline: none;
 }

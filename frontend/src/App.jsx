@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
+import { Toaster, ToastBar, toast } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { CompareProvider } from './context/CompareContext';
 import Navbar from './components/Navbar';
@@ -28,6 +28,7 @@ const App = () => {
                 borderRadius: '12px',
                 fontSize: '14px',
                 fontFamily: 'Inter, sans-serif',
+                cursor: 'pointer',
               },
               success: {
                 iconTheme: { primary: '#4ade80', secondary: '#1e2639' },
@@ -36,7 +37,13 @@ const App = () => {
                 iconTheme: { primary: '#f87171', secondary: '#1e2639' },
               },
             }}
-          />
+          >
+            {(t) => (
+              <div onClick={() => toast.dismiss(t.id)}>
+                <ToastBar toast={t} />
+              </div>
+            )}
+          </Toaster>
 
           <div className="min-h-screen flex flex-col">
             <Routes>

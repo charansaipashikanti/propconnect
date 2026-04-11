@@ -54,8 +54,8 @@ const Home = () => {
     document.title = 'PropConnect — Find Your Dream Home in Hyderabad';
     const fetchFeatured = async () => {
       try {
-        const { data } = await api.get('/properties?limit=3');
-        setFeatured(data.data.filter((p) => p.isFeatured).slice(0, 3));
+        const { data } = await api.get('/properties?limit=4');
+        setFeatured(data.data.filter((p) => p.isFeatured).slice(0, 4));
       } catch (err) {
         console.error(err);
       } finally {
@@ -175,12 +175,12 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((f) => (
-              <div key={f.title} className="glass-card p-6">
+              <div key={f.title} className="glass-card p-6 flex flex-col justify-between items-center">
                 <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mb-4">
                   {f.icon}
                 </div>
-                <h3 className="text-white font-semibold mb-2">{f.title}</h3>
-                <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
+                <h3 className="text-white font-semibold mb-2 text-center">{f.title}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed text-center">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -200,8 +200,8 @@ const Home = () => {
                 {user ? `Ready to find your match, ${user.name.split(' ')[0]}?` : 'Ready to Find Your Home?'}
               </h2>
               <p className="text-slate-300 text-lg mb-8 max-w-xl mx-auto">
-                {user 
-                  ? 'Access your saved properties and pick up right where you left off.' 
+                {user
+                  ? 'Access your saved properties and pick up right where you left off.'
                   : 'Join thousands of buyers who found their dream properties through PropConnect.'}
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
