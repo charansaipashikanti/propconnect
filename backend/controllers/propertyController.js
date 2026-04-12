@@ -61,7 +61,7 @@ const getProperties = asyncHandler(async (req, res) => {
   const skip = (Number(page) - 1) * Number(limit);
   const total = await Property.countDocuments(query);
   const properties = await Property.find(query)
-    .sort({ isFeatured: -1, createdAt: -1 })
+    .sort({ isFeatured: -1, createdAt: -1, _id: 1 })
     .skip(skip)
     .limit(Number(limit));
 
