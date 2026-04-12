@@ -36,7 +36,7 @@ const Properties = () => {
   const fetchProperties = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const params = { page, limit: 9 };
+      const params = { page, limit: 8 };
       Object.entries(appliedFilters).forEach(([k, v]) => {
         if (v !== '' && v !== null && v !== undefined) {
           params[k] = v;
@@ -127,11 +127,10 @@ const Properties = () => {
                 <button
                   key={page}
                   onClick={() => fetchProperties(page)}
-                  className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${
-                    page === pagination.currentPage
+                  className={`w-9 h-9 flex items-center justify-center rounded-lg text-sm font-medium transition-all ${page === pagination.currentPage
                       ? 'bg-blue-600 text-white'
                       : 'btn-secondary !px-0'
-                  }`}
+                    }`}
                 >
                   {page}
                 </button>
