@@ -52,11 +52,7 @@ jobs:
 
           echo ".env file created successfully!"
 
-          ls -la
-
-          chmod +x make_env.sh
-
-          ./make_env.sh
+          cat .env
 
     
       - name: building backend
