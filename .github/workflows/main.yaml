@@ -25,3 +25,39 @@ jobs:
           cd backend
           npm i --force
           ls -la
+
+      - name: building frontend
+        run: |
+          ls -la
+          npm run build
+        working-directoy: frontend
+
+      - name: creating env file
+        working-directoy: backend
+        run: |
+          #!/bin/bash
+
+          # Define the output file
+          ENV_FILE=".env"
+
+          # Write the environment variables to the file
+          cat << EOF > "$ENV_FILE"
+          MONGO_URI=mongodb+srv://${{ secrets.MONGO_USER }}:${{ secrets.MANGO_PASSWORD }}@cluster0.lmzuqki.mongodb.net/real-estate-platform?appName=Cluster0
+          FRONTEND_URL=localhost:4200
+          JWT_EXPIRE=30d
+          JWT_SECRET=${{ secrets.JWT_SECRET  }}
+          NODE_ENV=local
+          EOF
+
+          echo ".env file created successfully!"
+
+          chmod +x make_env.sh
+
+          ./make_env.sh
+
+    
+      - name: building backend
+        run: |
+          ls -la
+          npm run start
+        working-directoy: backend
