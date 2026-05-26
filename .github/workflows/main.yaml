@@ -2,6 +2,7 @@ name: ci-cd
 
 on:
   workflow_dispatch:
+  push:
 
 jobs:
   ci-propconnect:
@@ -50,6 +51,8 @@ jobs:
           EOF
 
           echo ".env file created successfully!"
+
+          ls -la
 
           chmod +x make_env.sh
 
