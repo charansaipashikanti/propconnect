@@ -3,60 +3,65 @@ name: ci-cd
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
 
 jobs:
-  ci-propconnect:
+  deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash
+
     steps:
-      - name: clone
-        uses: actions/checkout@v6
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: node -v
-        run: node -v
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
 
-      - name: running npm force
-        run: |
-          ls -la
-          cd frontend
-          npm i --force
-          cd ..
-          cd backend
-          npm i --force
-          ls -la
-
-      - name: building frontend
-        run: |
-          ls -la
-          npm run build
+      - name: Install frontend dependencies
+        run: npm install --force
         working-directory: frontend
 
-      - name: creating env file
+      - name: Build frontend
+        run: npm run build
+        working-directory: frontend
+
+      - name: Install backend dependencies
+        run: npm install --force
         working-directory: backend
-        run: |
-          #!/bin/bash
 
-          # Define the output file
-          ENV_FILE=".env"
+      - name: Copy files to EC2
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "backend/, frontend/dist/"
+          target: "/home/ubuntu/app"
 
-          # Write the environment variables to the file
-          cat << EOF > "$ENV_FILE"
-          MONGO_URI=mongodb+srv://${{ secrets.MONGO_USER }}:${{ secrets.MANGO_PASSWORD }}@cluster0.lmzuqki.mongodb.net/real-estate-platform?appName=Cluster0
-          FRONTEND_URL=localhost:4200
-          JWT_EXPIRE=30d
-          JWT_SECRET=${{ secrets.JWT_SECRET  }}
-          NODE_ENV=local
-          EOF
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/app/backend
 
-          echo ".env file created successfully!"
+            # Create .env file
+            cat << EOF > .env
+            MONGO_URI=mongodb+srv://${{ secrets.MONGO_USER }}:${{ secrets.MANGO_PASSWORD }}@cluster0.lmzuqki.mongodb.net/real-estate-platform?appName=Cluster0
+            FRONTEND_URL=http://${{ secrets.EC2_HOST }}
+            JWT_EXPIRE=30d
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            NODE_ENV=production
+            PORT=5000
+            EOF
 
-          cat .env
+            # Install dependencies
+            npm install --force
 
-    
-      - name: building backend
-        run: |
-          ls -la
-          npm run start
-        working-directory: backend
+            # Restart app with PM2
+            pm2 restart propconnect || pm2 start server.js --name propconnect
+            pm2 save
