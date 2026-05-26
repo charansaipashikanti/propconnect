@@ -33,7 +33,7 @@ jobs:
         working-directoy: frontend
 
       - name: creating env file
-        working-directoy: backend
+        working-directory: backend
         run: |
           #!/bin/bash
 
@@ -60,4 +60,4 @@ jobs:
         run: |
           ls -la
           npm run start
-        working-directoy: backend
+        working-directory: backend
