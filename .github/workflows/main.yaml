@@ -6,10 +6,22 @@ on:
 jobs:
   ci-propconnect:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: clone
         uses: actions/checkout@v6
 
       - name: node -v
         run: node -v
-        shell: bash
+
+      - name: running npm force
+        run: |
+          ls -la
+          cd frontend
+          npm i --force
+          cd ..
+          cd backend
+          npm i --force
+          ls -la
