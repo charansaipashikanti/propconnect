@@ -1,0 +1,15 @@
+name: ci-cd
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ci-propconnect:
+    runs-on: ubuntu-lates
+    steps:
+      - name: clone
+        uses: actions/checkout@v6
+
+      - name: node -v
+        run: node -v
+        shell: bash
