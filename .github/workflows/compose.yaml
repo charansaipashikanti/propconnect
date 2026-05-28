@@ -124,10 +124,10 @@ jobs:
 
             # Stop old containers
             cd /home/ubuntu/app
-            docker compose down || true
+            docker-compose down || true
 
             # Start new containers
-            docker compose up -d
+            docker-compose up -d
 
             # Verify containers are running
-            docker compose ps
+            docker-compose ps
