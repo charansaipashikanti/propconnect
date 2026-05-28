@@ -3,7 +3,7 @@ run-name: propconnect
 
 on:
   workflow_dispatch:
-  push:
+  # push:
 
 jobs:
   deploy:
