@@ -34,21 +34,6 @@ jobs:
           file: docker/Dockerfile
 
 
-      - name: check docker images
-        run: |
-          docker images
-        
-      - name: Archive Docker Image
-        run: docker save propconnect:latest -o propconnect-image.tar
-
-      - name: Upload Docker Image Artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: propconnect-image
-          path: propconnect-image.tar
-          retention-days: 5
-
-
       - name: Install Docker on EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
