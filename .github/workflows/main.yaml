@@ -2,7 +2,7 @@ name: ci-cd
 
 on:
   workflow_dispatch:
-  push:
+  # push:
 
 jobs:
   deploy:

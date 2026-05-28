@@ -1,0 +1,31 @@
+name: ci-cd
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: docker build
+        run: |
+          docker build -t frontend:latest .
+        working-directory: docker
+
+      - name: check docker images
+        run: |
+          docker images
+        
+      - name: Archive Docker Image
+        run: docker save frontend:latest -o frontend-image.tar
+
+      - name: Upload Docker Image Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: frontend-image
+          path: frontend-image.tar
+          retention-days: 5
