@@ -1,0 +1,133 @@
+name: docker-compose pipeline
+run-name: propconnect
+
+on:
+  workflow_dispatch:
+  push:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKERUSERNAME }}
+          password: ${{ secrets.DOCKERTOKEN }}
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          tags: pavansaipashikanti/propconnect-backend:latest
+          file: docker/backend.Dockerfile
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          tags: pavansaipashikanti/propconnect-frontend:latest
+          file: docker/frontend.Dockerfile
+
+
+      - name: Install Docker on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Install Docker if not present
+            if ! command -v docker &> /dev/null; then
+              sudo apt update
+              sudo apt install docker.io -y
+              sudo systemctl start docker
+              sudo systemctl enable docker
+              sudo usermod -aG docker ubuntu
+              echo "Docker installed!"
+            else
+              echo "Docker already installed: $(docker --version)"
+            fi
+
+            # Install Docker Compose if not present
+            if ! command -v docker compose &> /dev/null; then
+              sudo apt install docker-compose-plugin -y
+              echo "Docker Compose installed!"
+            else
+              echo "Docker Compose already installed: $(docker compose version)"
+            fi
+
+
+      - name: Deploy on EC2
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            # Create app folder
+            mkdir -p /home/ubuntu/app
+
+            # Create .env file
+            cat << EOF > /home/ubuntu/app/.env
+            MONGO_URI=mongodb+srv://${{ secrets.MONGO_USER }}:${{ secrets.MANGO_PASSWORD }}@cluster0.lmzuqki.mongodb.net/real-estate-platform?appName=Cluster0
+            FRONTEND_URL=http://${{ secrets.EC2_HOST }}
+            JWT_EXPIRE=30d
+            JWT_SECRET=${{ secrets.JWT_SECRET }}
+            NODE_ENV=production
+            PORT=5000
+            EOF
+
+            # Create docker-compose.yml on EC2
+            cat << EOF > /home/ubuntu/app/docker-compose.yml
+            services:
+              frontend:
+                image: pavansaipashikanti/propconnect-frontend:latest
+                ports:
+                  - "80:80"
+                depends_on:
+                  - backend
+                networks:
+                  - propconnect-network
+
+              backend:
+                image: pavansaipashikanti/propconnect-backend:latest
+                ports:
+                  - "5000:5000"
+                env_file:
+                  - .env
+                networks:
+                  - propconnect-network
+
+            networks:
+              propconnect-network:
+                driver: bridge
+            EOF
+
+            # Login to Docker Hub
+            docker login -u ${{ vars.DOCKERUSERNAME }} -p ${{ secrets.DOCKERTOKEN }}
+
+            # Pull latest images
+            docker pull pavansaipashikanti/propconnect-frontend:latest
+            docker pull pavansaipashikanti/propconnect-backend:latest
+
+            # Stop old containers
+            cd /home/ubuntu/app
+            docker compose down || true
+
+            # Start new containers
+            docker compose up -d
+
+            # Verify containers are running
+            docker compose ps
