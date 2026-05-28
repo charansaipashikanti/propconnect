@@ -1,4 +1,4 @@
-name: docker pipeline
+name: ci-cd
 on:
   workflow_dispatch:
   # push:
