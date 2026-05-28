@@ -12,8 +12,7 @@ jobs:
 
       - name: docker build
         run: |
-          docker build -t frontend:latest .
-        working-directory: docker
+          docker build -f docker/Dockerfile -t frontend:latest .
 
       - name: check docker images
         run: |
