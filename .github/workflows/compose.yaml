@@ -60,8 +60,9 @@ jobs:
               echo "Docker already installed: $(docker --version)"
             fi
 
-            # Install Docker Compose if not present
-            if ! command -v docker compose &> /dev/null; then
+            # Install Docker Compose plugin if not present
+            if ! docker compose version &> /dev/null; then
+              sudo apt update
               sudo apt install docker-compose-plugin -y
               echo "Docker Compose installed!"
             else
@@ -124,11 +125,11 @@ jobs:
 
             # Stop old containers
             cd /home/ubuntu/app
-            docker-compose down || true
+            docker compose down || true
 
             # Start new containers
-            docker-compose up -d
+            docker compose up -d
 
             # Verify containers are running
-            docker-compose ps
-            
+            docker compose ps
+
