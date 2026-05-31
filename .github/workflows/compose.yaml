@@ -50,14 +50,14 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: pavan/propconnect-backend:latest
+          tags: 498456381583.dkr.ecr.ap-south-2.amazonaws.com/pavan/propconnect-backend:latest
           file: docker/backend.Dockerfile
 
       - name: Build and push frontend
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: pavan/propconnect-frontend:latest
+          tags: 498456381583.dkr.ecr.ap-south-2.amazonaws.com/pavan/propconnect-frontend:latest
           file: docker/frontend.Dockerfile
 
 
