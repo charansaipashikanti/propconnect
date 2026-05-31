@@ -27,7 +27,7 @@ jobs:
         with:
           aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: <region>
+          aws-region: ap-south-2
 
 
       - name: Login to GitHub Container Registry
@@ -35,7 +35,7 @@ jobs:
         with:
           # username: ${{ vars.DOCKERUSERNAME }}
           # password: ${{ secrets.DOCKERTOKEN }}
-          registry: 498456381583.dkr.ecrap-south-2.amazonaws.com
+          registry: 498456381583.dkr.ecr.ap-south-2.amazonaws.com
           username: ${{ vars.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -50,14 +50,14 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: pavansaipashikanti/propconnect-backend:latest
+          tags: pavan/propconnect-backend:latest
           file: docker/backend.Dockerfile
 
       - name: Build and push frontend
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: pavansaipashikanti/propconnect-frontend:latest
+          tags: pavan/propconnect-frontend:latest
           file: docker/frontend.Dockerfile
 
 
