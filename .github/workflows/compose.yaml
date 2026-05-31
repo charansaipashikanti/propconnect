@@ -27,7 +27,7 @@ jobs:
         with:
           aws-access-key-id: ${{ vars.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ap-south-2
+          aws-region: ap-south-1
 
 
       - name: Login to GitHub Container Registry
@@ -35,7 +35,7 @@ jobs:
         with:
           # username: ${{ vars.DOCKERUSERNAME }}
           # password: ${{ secrets.DOCKERTOKEN }}
-          registry: 498456381583.dkr.ecr.ap-south-2.amazonaws.com
+          registry: 498456381583.dkr.ecr.ap-south-1.amazonaws.com
           username: ${{ vars.AWS_ACCESS_KEY_ID }}
           password: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -50,19 +50,19 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: 498456381583.dkr.ecr.ap-south-2.amazonaws.com/pavan/propconnect-backend:latest
+          tags: 498456381583.dkr.ecr.ap-south-1.amazonaws.com/pavan/propconnect-backend:latest
           file: docker/backend.Dockerfile
 
       - name: Build and push frontend
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: 498456381583.dkr.ecr.ap-south-2.amazonaws.com/pavan/propconnect-frontend:latest
+          tags: 498456381583.dkr.ecr.ap-south-1.amazonaws.com/pavan/propconnect-frontend:latest
           file: docker/frontend.Dockerfile
 
 
       - name: Install Docker on EC2
-        # if: FALSE
+        if: FALSE
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
@@ -95,7 +95,7 @@ jobs:
 
 
       - name: Deploy on EC2
-        # if: FALSE
+        if: FALSE
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
