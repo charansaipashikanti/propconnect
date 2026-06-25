@@ -33,14 +33,14 @@ jobs:
           tags: pavansaipashikanti/propconnect:latest
           file: docker/Dockerfile
 
-      - name: Build and push
+      - name: Build and push frontend
         uses: docker/build-push-action@v7
         with:
           push: true
           tags: pavansaipashikanti/propconnect:latest
           file: docker/frontend.Dockerfile
 
-      - name: Build and push
+      - name: Build and push backend
         uses: docker/build-push-action@v7
         with:
           push: true
