@@ -1,5 +1,5 @@
 name: docker pipeline build
-run-name: propconnect
+run-name: docker pipeline build
 
 on:
   workflow_dispatch:
