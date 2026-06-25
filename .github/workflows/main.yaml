@@ -1,9 +1,9 @@
-name: docker pipeline
+name: docker pipeline build
 run-name: propconnect
 
 on:
   workflow_dispatch:
-  # push:
+  push:
 
 jobs:
   deploy:
