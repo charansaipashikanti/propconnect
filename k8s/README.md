@@ -504,6 +504,29 @@ JWT_EXPIRE=30d
 
 The `ClusterSecretStore` is not included here because it is provider-specific. AWS Secrets Manager, GCP Secret Manager, Azure Key Vault, Vault, and other providers all use different authentication settings.
 
+## Bootstrap Script
+
+For Killercoda, you can install the cluster add-ons and the AWS secret-store wiring with one script:
+
+```bash
+chmod +x k8s/bootstrap-killercoda.sh
+AWS_ACCESS_KEY_ID=YOUR_AWS_ACCESS_KEY_ID \
+AWS_SECRET_ACCESS_KEY=YOUR_AWS_SECRET_ACCESS_KEY \
+AWS_REGION=ap-south-2 \
+./k8s/bootstrap-killercoda.sh
+```
+
+What it installs:
+
+- External Secrets Operator
+- NGINX Ingress Controller
+- Metrics Server with the kubelet TLS workaround for playground clusters
+- cert-manager
+- `awssm-secret` in the `external-secrets` namespace
+- `propconnect-secret-store`
+
+The script uses `ap-south-2` by default. Override `AWS_REGION` only if your secret lives in another AWS region.
+
 ## Before You Run
 
 Review these values before applying to a real cluster:
