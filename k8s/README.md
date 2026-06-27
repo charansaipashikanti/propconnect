@@ -120,63 +120,37 @@ flowchart TB
 | `clustersecretstore-aws-killercoda.example.yaml` | Example AWS Secrets Manager store for Killercoda/testing using AWS access keys stored in Kubernetes. |
 
 
-## Access Without A Paid Domain
+## Localhost Access
 
-You have three practical options:
+For Killercoda, the simplest path is to keep everything local and skip DuckDNS and Ingress for now.
 
-| Option | Best For | How You Access It |
-| --- | --- | --- |
-| Port-forward | Quick local testing | `http://localhost:8080` |
-| LoadBalancer address | Cloud cluster testing | Ingress external IP or cloud load balancer hostname |
-| DuckDNS | Public demo without buying a domain | `https://propconnect07.duckdns.org` |
-
-DuckDNS is a good choice for this project. You already created:
-
-```text
-propconnect07.duckdns.org
-```
-
-For a cloud Kubernetes cluster, point DuckDNS to the external IP of your ingress controller, not usually your laptop IP.
-
-Find the ingress controller external address:
-
-```bash
-kubectl get svc -A
-```
-
-Look for the service used by your ingress controller, commonly `ingress-nginx-controller`. If it shows an external IP, copy that IP into DuckDNS as the current IP.
-
-Then confirm DNS resolves:
-
-```bash
-nslookup propconnect07.duckdns.org
-```
-
-For quick testing before DNS is ready, use port-forward:
+1. Port-forward the frontend service:
 
 ```bash
 kubectl -n propconnect port-forward svc/propconnect-frontend 8080:80
 ```
 
-Open:
+2. Open:
 
 ```text
 http://localhost:8080
 ```
 
-The frontend can load, but full `/api` routing through ingress is best tested through the ingress host after DuckDNS points to the ingress address.
+3. The frontend Nginx container now proxies `/api` to the backend service inside the cluster, so login and API calls work from the same localhost origin.
 
-### TLS Note
+If you want to inspect the backend directly, you can also open a second port-forward:
 
-The current ingress is production-oriented and expects this TLS secret:
-
-```text
-propconnect-tls
+```bash
+kubectl -n propconnect port-forward svc/propconnect-backend 5000:5000
 ```
 
-For HTTPS on DuckDNS, install cert-manager and create a certificate for `propconnect07.duckdns.org`, or manually create the `propconnect-tls` secret.
+Then test:
 
-If you only want a temporary HTTP test, change `nginx.ingress.kubernetes.io/ssl-redirect` to `"false"` in `ingress.yaml` and remove the `tls` block. Keep HTTPS for production.
+```text
+http://localhost:5000/api/health
+```
+
+Keep the Ingress and DuckDNS setup for later when you want a public URL. For local-only testing, the frontend service port-forward is the cleanest route.
 
 ## Required Cluster Add-ons
 

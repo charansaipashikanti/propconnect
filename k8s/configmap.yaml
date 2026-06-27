@@ -7,6 +7,6 @@ metadata:
     app.kubernetes.io/name: propconnect
     app.kubernetes.io/part-of: propconnect
 data:
-  NODE_ENV: production
+  NODE_ENV: development
   PORT: "5000"
-  FRONTEND_URL: https://propconnect07.duckdns.org
+  FRONTEND_URL: http://localhost:8080
