@@ -5,25 +5,84 @@ This folder deploys PropConnect as a production-style Kubernetes application wit
 ## Architecture
 
 ```mermaid
-flowchart LR
-    user["User Browser"] --> dns["DNS: propconnect07.duckdns.org"]
-    dns --> ingress["Ingress Controller"]
+flowchart TB
+    browser(["User browser"])
+    dns["DuckDNS<br/>propconnect07.duckdns.org"]
 
-    ingress -->|/| frontendSvc["frontend Service"]
-    ingress -->|/api| backendSvc["backend Service"]
+    subgraph cluster["Kubernetes cluster"]
+        direction TB
+        ingress["NGINX Ingress Controller<br/>HTTPS termination and routing"]
 
-    frontendSvc --> frontendPods["frontend Pods\nNginx + React build"]
-    backendSvc --> backendPods["backend Pods\nNode.js + Express API"]
+        subgraph app["propconnect namespace"]
+            direction LR
 
-    backendPods --> mongo["MongoDB Atlas or external MongoDB"]
+            subgraph web["Frontend"]
+                direction TB
+                frontendSvc["Frontend Service<br/>ClusterIP :80"]
+                frontendPods["Frontend Pods<br/>Nginx and React"]
+                frontendSvc --> frontendPods
+            end
 
-    eso["External Secrets Operator"] --> externalStore["External Secret Store\nAWS/GCP/Azure/Vault/etc."]
-    externalStore --> eso
-    eso --> k8sSecret["Kubernetes Secret\npropconnect-backend-secret"]
-    k8sSecret --> backendPods
+            subgraph api["Backend"]
+                direction TB
+                backendSvc["Backend Service<br/>ClusterIP :5000"]
+                backendPods["Backend Pods<br/>Node.js and Express"]
+                backendSvc --> backendPods
+            end
 
-    hpa["Horizontal Pod Autoscalers"] --> frontendPods
-    hpa --> backendPods
+            appSecret[("Kubernetes Secret<br/>propconnect-backend-secret")]
+            appConfig["ConfigMap<br/>non-secret configuration"]
+            appSecret -. "credentials" .-> backendPods
+            appConfig -. "runtime config" .-> backendPods
+        end
+
+        subgraph operations["Cluster services"]
+            direction LR
+            certManager["cert-manager"]
+            tlsSecret[("TLS Secret<br/>propconnect-tls")]
+            eso["External Secrets Operator"]
+            metrics["Metrics Server"]
+            frontendHpa["Frontend HPA"]
+            backendHpa["Backend HPA"]
+
+            certManager -. "renews" .-> tlsSecret
+            metrics -. "metrics" .-> frontendHpa
+            metrics -. "metrics" .-> backendHpa
+        end
+
+        ingress -->|"/"| frontendSvc
+        ingress -->|"/api"| backendSvc
+        tlsSecret -. "certificate" .-> ingress
+        frontendHpa -. "scales" .-> frontendPods
+        backendHpa -. "scales" .-> backendPods
+        eso -. "creates and refreshes" .-> appSecret
+    end
+
+    secrets["AWS Secrets Manager<br/>propconnect/production/backend"]
+    mongo[("MongoDB Atlas<br/>or external MongoDB")]
+
+    browser -->|"HTTPS"| dns
+    dns --> ingress
+    eso -->|"authenticated fetch"| secrets
+    backendPods -->|"TLS connection"| mongo
+
+    classDef edge fill:#0f766e,color:#ffffff,stroke:#115e59,stroke-width:2px;
+    classDef service fill:#2563eb,color:#ffffff,stroke:#1e40af,stroke-width:2px;
+    classDef workload fill:#e0f2fe,color:#0c4a6e,stroke:#0284c7,stroke-width:2px;
+    classDef data fill:#fef3c7,color:#78350f,stroke:#d97706,stroke-width:2px;
+    classDef ops fill:#f3e8ff,color:#581c87,stroke:#9333ea,stroke-width:2px;
+
+    class browser,dns edge;
+    class ingress,frontendSvc,backendSvc service;
+    class frontendPods,backendPods workload;
+    class appSecret,appConfig,secrets,mongo,tlsSecret data;
+    class certManager,eso,metrics,frontendHpa,backendHpa ops;
+
+    style cluster fill:#f8fafc,stroke:#475569,stroke-width:2px,color:#0f172a
+    style app fill:#ffffff,stroke:#64748b,stroke-width:2px,color:#0f172a
+    style web fill:#eff6ff,stroke:#60a5fa,color:#0f172a
+    style api fill:#ecfeff,stroke:#22d3ee,color:#0f172a
+    style operations fill:#faf5ff,stroke:#c084fc,color:#0f172a
 ```
 
 ## Images
@@ -474,8 +533,3 @@ kubectl -n propconnect logs deployment/propconnect-frontend
 ```bash
 kubectl delete -k k8s/
 ```
-
-
-
-
-
