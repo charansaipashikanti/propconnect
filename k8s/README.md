@@ -232,6 +232,14 @@ For DuckDNS, copy the external IP or load balancer hostname from `ingress-nginx-
 
 Metrics Server provides CPU and memory usage metrics to Kubernetes. The `backend-hpa.yaml` and `frontend-hpa.yaml` files need it so the Horizontal Pod Autoscalers can scale pods up or down.
 
+This repo works with Kubernetes `v1.31+`. Check your cluster version first:
+
+```bash
+kubectl version
+```
+
+If the server version is `1.31` or newer, the latest Metrics Server manifest is fine. For example, the Killercoda cluster used during testing reports `Server Version: v1.35.1`.
+
 Install with the official manifest:
 
 ```bash
@@ -247,6 +255,33 @@ kubectl top pods -n propconnect
 ```
 
 If `kubectl top` does not work immediately, wait a minute and try again.
+
+If the `metrics-server` pod stays at `0/1` and the logs show this error:
+
+```text
+x509: cannot validate certificate for <node-ip> because it doesn't contain any IP SANs
+```
+
+then the cluster's kubelet certificates are not trusted for direct scrape traffic. This is common in playground clusters like Killercoda.
+
+Patch the deployment and add these args:
+
+```bash
+kubectl -n kube-system edit deployment metrics-server
+```
+
+```yaml
+- --kubelet-insecure-tls
+- --kubelet-preferred-address-types=InternalIP,Hostname,InternalDNS
+```
+
+Then restart and verify again:
+
+```bash
+kubectl -n kube-system rollout restart deployment metrics-server
+kubectl -n kube-system rollout status deployment metrics-server
+kubectl top nodes
+```
 
 ### 4. TLS Secret Or cert-manager
 
