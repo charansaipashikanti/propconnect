@@ -11,7 +11,7 @@ flowchart TB
 
     subgraph cluster["Kubernetes cluster"]
         direction TB
-        ingress["NGINX Ingress Controller<br/>HTTPS termination and routing"]
+        ingressController["NGINX Ingress Controller<br/>HTTPS termination and routing"]
 
         subgraph app["propconnect namespace"]
             direction LR
@@ -32,37 +32,43 @@ flowchart TB
 
             appSecret[("Kubernetes Secret<br/>propconnect-backend-secret")]
             appConfig["ConfigMap<br/>non-secret configuration"]
+            externalSecret["ExternalSecret<br/>propconnect-backend"]
+            ingress["Ingress<br/>host and path routing"]
+            tlsSecret[("TLS Secret<br/>propconnect-tls")]
+            frontendHpa["Frontend HPA"]
+            backendHpa["Backend HPA"]
+
             appSecret -. "credentials" .-> backendPods
             appConfig -. "runtime config" .-> backendPods
+            externalSecret -. "creates and refreshes" .-> appSecret
+            tlsSecret -. "certificate" .-> ingress
+            frontendHpa -. "scales" .-> frontendPods
+            backendHpa -. "scales" .-> backendPods
+            ingress -->|"/"| frontendSvc
+            ingress -->|"/api"| backendSvc
         end
 
         subgraph operations["Cluster services"]
             direction LR
             certManager["cert-manager"]
-            tlsSecret[("TLS Secret<br/>propconnect-tls")]
             eso["External Secrets Operator"]
             metrics["Metrics Server"]
-            frontendHpa["Frontend HPA"]
-            backendHpa["Backend HPA"]
 
             certManager -. "renews" .-> tlsSecret
             metrics -. "metrics" .-> frontendHpa
             metrics -. "metrics" .-> backendHpa
         end
 
-        ingress -->|"/"| frontendSvc
-        ingress -->|"/api"| backendSvc
-        tlsSecret -. "certificate" .-> ingress
-        frontendHpa -. "scales" .-> frontendPods
-        backendHpa -. "scales" .-> backendPods
-        eso -. "creates and refreshes" .-> appSecret
+        ingressController --> ingress
+        eso -. "watches" .-> externalSecret
     end
 
     secrets["AWS Secrets Manager<br/>propconnect/production/backend"]
     mongo[("MongoDB Atlas<br/>or external MongoDB")]
 
-    browser -->|"HTTPS"| dns
-    dns --> ingress
+    browser -. "DNS lookup" .-> dns
+    dns -. "resolves host" .-> ingressController
+    browser -->|"HTTPS"| ingressController
     eso -->|"authenticated fetch"| secrets
     backendPods -->|"TLS connection"| mongo
 
@@ -73,7 +79,7 @@ flowchart TB
     classDef ops fill:#f3e8ff,color:#581c87,stroke:#9333ea,stroke-width:2px;
 
     class browser,dns edge;
-    class ingress,frontendSvc,backendSvc service;
+    class ingressController,ingress,frontendSvc,backendSvc service;
     class frontendPods,backendPods workload;
     class appSecret,appConfig,secrets,mongo,tlsSecret data;
     class certManager,eso,metrics,frontendHpa,backendHpa ops;
