@@ -6,6 +6,7 @@ This workspace is the learning layer for the PropConnect project. The goal is to
 
 - `helm/propconnect/` for packaging the Kubernetes app as a Helm chart
 - `monitoring/` for Prometheus and Grafana install notes and values
+- `argocd/` for GitOps install and application setup
 
 ## Learning Flow
 
@@ -22,4 +23,5 @@ For now we are using Killercoda as the runtime cluster and learning how Helm cha
 ## Quick Links
 
 - [Helm chart](./helm/propconnect/README.md)
+- [Argo CD setup](./argocd/README.md)
 - [Monitoring setup](./monitoring/README.md)
