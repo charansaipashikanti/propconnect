@@ -119,6 +119,73 @@ flowchart TB
 | `clustersecretstore-aws.example.yaml` | Example AWS Secrets Manager store for EKS IRSA or Pod Identity. Copy/apply only after configuring AWS IAM access. |
 | `clustersecretstore-aws-killercoda.example.yaml` | Example AWS Secrets Manager store for Killercoda/testing using AWS access keys stored in Kubernetes. |
 
+## What Is Actually Used Right Now
+
+The active deployment bundle is the resource list in [`k8s/kustomization.yaml`](D:\propconnect\actions-gha\propconnect\k8s\kustomization.yaml). Right now it includes:
+
+- `serviceaccount.yaml`
+- `configmap.yaml`
+- `externalsecret.yaml`
+- `backend-deployment.yaml`
+- `backend-service.yaml`
+- `frontend-deployment.yaml`
+- `frontend-service.yaml`
+- `ingress.yaml`
+- `backend-hpa.yaml`
+- `frontend-hpa.yaml`
+- `backend-pdb.yaml`
+- `frontend-pdb.yaml`
+- `limitrange.yaml`
+- `network-policy.yaml`
+
+`namespace.yaml` still exists in the folder, but it is commented out in `kustomization.yaml`, so it is not part of the active app sync right now.
+
+That means there are two valid ways to handle the namespace:
+
+1. Let Argo CD create it with `CreateNamespace=true`
+2. Create it manually once before running `kubectl apply -k k8s/`
+
+For the current learning setup, option 2 is the least confusing if you are applying manifests directly.
+
+## Suggested Step-by-Step Flow
+
+1. Install the required cluster add-ons:
+   - External Secrets Operator
+   - NGINX Ingress Controller
+   - Metrics Server
+   - cert-manager or a manually created TLS secret
+2. Create the `propconnect` namespace if you are applying locally with `kubectl`.
+3. Make sure your external secret store exists and is named `propconnect-secret-store`.
+4. Make sure the remote secret `propconnect/production/backend` exists in AWS Secrets Manager or your chosen provider.
+5. Apply the app manifests with `kubectl apply -k k8s/` or let Argo CD sync the folder.
+6. Wait for `propconnect-backend-secret` to be created by External Secrets.
+7. Check that backend and frontend pods become ready.
+8. Verify service endpoints and ingress.
+9. Access the frontend with port-forward for local testing, or through ingress for public testing.
+
+## Current Manifest Dependency Order
+
+The bundle works best in this order:
+
+1. `namespace.yaml` only if you are creating the namespace manually
+2. `serviceaccount.yaml`
+3. `configmap.yaml`
+4. `externalsecret.yaml`
+5. `backend-deployment.yaml`
+6. `backend-service.yaml`
+7. `frontend-deployment.yaml`
+8. `frontend-service.yaml`
+9. `ingress.yaml`
+10. `backend-hpa.yaml`
+11. `frontend-hpa.yaml`
+12. `backend-pdb.yaml`
+13. `frontend-pdb.yaml`
+14. `limitrange.yaml`
+15. `network-policy.yaml`
+
+In practice, `kustomization.yaml` handles the apply order, but this list shows the dependency flow so the setup is easier to reason about.
+
+
 
 ## Localhost Access
 
