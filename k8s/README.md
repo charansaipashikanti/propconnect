@@ -564,7 +564,35 @@ kubectl -n propconnect describe externalsecret propconnect-backend
 kubectl -n propconnect describe deployment propconnect-backend
 kubectl -n propconnect logs deployment/propconnect-backend
 kubectl -n propconnect logs deployment/propconnect-frontend
+kubectl -n propconnect get endpoints propconnect-frontend propconnect-backend -o wide
+kubectl -n propconnect exec deploy/propconnect-frontend -- sh -c "wget -qO- http://127.0.0.1:8080/ | head"
+kubectl -n propconnect exec deploy/propconnect-frontend -- sh -c "wget -qO- http://propconnect-backend:5000/api/health"
 ```
+
+## How We Debugged It
+
+When the app showed `502 Bad Gateway`, the frontend and backend pods were already running. The real problem was not the app itself, but how the port-forward was exposed in Killercoda.
+
+What we checked:
+
+1. `ExternalSecret` status to make sure the AWS secret synced into Kubernetes.
+2. Pod status for both frontend and backend.
+3. Service endpoints to confirm the services pointed at live pods.
+4. Frontend logs to confirm Nginx started correctly.
+5. In-pod requests to confirm the frontend could serve HTML and reach the backend API.
+6. The port-forward binding.
+
+The key lesson:
+
+- `kubectl port-forward` without `--address 0.0.0.0` binds to localhost only.
+- Killercoda browser access needed the forwarded port to be reachable from outside that local loopback.
+- The fix was:
+
+```bash
+kubectl -n propconnect port-forward --address 0.0.0.0 svc/propconnect-frontend 8080:80
+```
+
+That made the forwarded port available to the Killercoda traffic URL, and the app loaded successfully.
 
 ## Remove Deployment
 
