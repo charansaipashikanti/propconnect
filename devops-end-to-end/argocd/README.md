@@ -37,10 +37,10 @@ kubectl -n argocd get pods
 
 ## Access The UI
 
-Port-forward the server:
+Start with the normal HTTPS port-forward:
 
 ```bash
-kubectl -n argocd port-forward svc/argocd-server 8080:443
+kubectl -n argocd port-forward --address 0.0.0.0 svc/argocd-server 8080:443
 ```
 
 Open:
@@ -49,7 +49,32 @@ Open:
 https://localhost:8080
 ```
 
-The browser may show a certificate warning during port-forward access. That is normal for local testing.
+If Killercoda shows a redirect loop or `ERR_TOO_MANY_REDIRECTS`, switch Argo CD to insecure mode for local learning.
+
+## Killercoda Redirect Fix
+
+Argo CD server can keep redirecting HTTP to HTTPS, which clashes with the Killercoda browser proxy. The local learning fix is:
+
+```bash
+kubectl -n argocd patch deployment argocd-server --type=json -p='[
+  {"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--insecure"}
+]'
+```
+
+Then restart it:
+
+```bash
+kubectl -n argocd rollout restart deployment argocd-server
+kubectl -n argocd rollout status deployment argocd-server
+```
+
+After that, forward the HTTP port instead of HTTPS:
+
+```bash
+kubectl -n argocd port-forward --address 0.0.0.0 svc/argocd-server 8080:80
+```
+
+Open the Killercoda 8080 browser URL again.
 
 ## Get The Initial Password
 
@@ -86,3 +111,15 @@ kubectl apply -f application-propconnect.yaml
 ## Learning Notes
 
 For now, keep PropConnect deployment logic in the `k8s/` folder and let Argo CD sync that folder. Later, you can switch the same app to Helm without changing the GitOps workflow.
+
+## Debug Notes
+
+Useful checks while Argo CD is starting:
+
+```bash
+kubectl -n argocd get pods -w
+kubectl -n argocd get svc
+kubectl -n argocd logs deploy/argocd-server --tail=100
+```
+
+Use `8080:443` for HTTPS mode and `8080:80` after applying `--insecure`.
