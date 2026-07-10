@@ -38,7 +38,13 @@ In Killercoda, the fix is usually to run Metrics Server with:
 ## 2. Install kube-prometheus-stack
 
 ### What to do
-From the repo root, run:
+From the repo root, run the helper script:
+
+```bash
+bash devops-end-to-end/monitoring/install-monitoring.sh
+```
+
+If you want the manual Helm commands, the script is doing the same thing behind the scenes:
 
 ```bash
 helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
@@ -203,3 +209,4 @@ Think of monitoring as three layers:
 - Grafana = displays the metrics
 
 That is the clean path from raw cluster data to useful dashboards.
+

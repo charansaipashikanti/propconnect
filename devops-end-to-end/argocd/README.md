@@ -22,12 +22,13 @@ For this project, the usual flow is:
 
 ## Install Argo CD In Killercoda
 
-Run these commands from WSL or the Killercoda terminal:
+Use the helper script from the repo root:
 
 ```bash
-kubectl create namespace argocd
-kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+bash devops-end-to-end/argocd/install-argocd.sh
 ```
+
+If you want to do it manually, the script is doing the same thing: creating the namespace, applying the official Argo CD manifest, waiting for the core workloads, and optionally patching `argocd-server` into insecure mode for playground access.
 
 Wait until the pods are ready:
 
