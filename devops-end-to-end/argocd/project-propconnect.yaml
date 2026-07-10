@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: propconnect
+  namespace: argocd
+spec:
+  description: PropConnect learning project for the devops-end-to-end track
+  sourceRepos:
+    - https://github.com/pavansai-pashikanti07/propconnect.git
+  destinations:
+    - namespace: propconnect
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: '*'
+      kind: '*'
+  namespaceResourceWhitelist:
+    - group: '*'
+      kind: '*'

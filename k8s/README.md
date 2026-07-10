@@ -7,11 +7,11 @@ This folder deploys PropConnect as a production-style Kubernetes application wit
 ```mermaid
 flowchart TB
     browser(["User browser"])
-    dns["DuckDNS<br/>propconnect07.duckdns.org"]
+    dns["Playground access<br/>port-forward or ingress URL"]
 
     subgraph cluster["Kubernetes cluster"]
         direction TB
-        ingressController["NGINX Ingress Controller<br/>HTTPS termination and routing"]
+        ingressController["NGINX Ingress Controller<br/>HTTP routing (TLS optional)"]
 
         subgraph app["propconnect namespace"]
             direction LR
@@ -33,7 +33,7 @@ flowchart TB
             appSecret[("Kubernetes Secret<br/>propconnect-backend-secret")]
             appConfig["ConfigMap<br/>non-secret configuration"]
             externalSecret["ExternalSecret<br/>propconnect-backend"]
-            ingress["Ingress<br/>host and path routing"]
+            ingress["Ingress<br/>path routing"]
             tlsSecret[("TLS Secret<br/>propconnect-tls")]
             frontendHpa["Frontend HPA"]
             backendHpa["Backend HPA"]
@@ -187,37 +187,49 @@ In practice, `kustomization.yaml` handles the apply order, but this list shows t
 
 
 
-## Localhost Access
+## Playground Access
 
-For Killercoda, the simplest path is to keep everything local and skip DuckDNS and Ingress for now.
+For this repo there are two clean ways to open the app in a playground.
 
-1. Port-forward the frontend service:
+### Option A. Simplest path
 
-```bash
-kubectl -n propconnect port-forward svc/propconnect-frontend 8080:80
-```
-
-2. Open:
-
-```text
-http://localhost:8080
-```
-
-3. The frontend Nginx container now proxies `/api` to the backend service inside the cluster, so login and API calls work from the same localhost origin.
-
-If you want to inspect the backend directly, you can also open a second port-forward:
+Port-forward the frontend service:
 
 ```bash
-kubectl -n propconnect port-forward svc/propconnect-backend 5000:5000
+kubectl -n propconnect port-forward --address 0.0.0.0 svc/propconnect-frontend 8080:80
 ```
 
-Then test:
+Then expose port `8080` in the playground UI and open the generated browser URL.
 
-```text
-http://localhost:5000/api/health
+Use this path when you just want the app running and do not care about ingress internals yet. It also matches the current frontend configuration, which expects the app to be reached from `http://localhost:8080`.
+
+### Option B. Ingress learning path
+
+If you want to practice ingress, port-forward the ingress controller service instead:
+
+```bash
+kubectl -n ingress-nginx port-forward --address 0.0.0.0 svc/ingress-nginx-controller 8081:80
 ```
 
-Keep the Ingress and DuckDNS setup for later when you want a public URL. For local-only testing, the frontend service port-forward is the cleanest route.
+Then expose port `8081` in the playground UI and open the generated browser URL.
+
+Ingress routes:
+
+- `/` -> frontend
+- `/api` -> backend
+
+### MetalLB IP note
+
+`172.30.255.240` is the internal MetalLB address for the ingress controller. In most playgrounds you cannot browse that IP directly from your laptop browser. Use the playground port exposure step above to get a browser URL.
+
+Useful local checks:
+
+```bash
+curl http://localhost:8080/
+curl http://localhost:8080/api/health
+curl http://127.0.0.1:8081/
+curl http://127.0.0.1:8081/api/health
+```
 
 ## Required Cluster Add-ons
 
@@ -267,7 +279,7 @@ kubectl -n ingress-nginx get pods
 kubectl -n ingress-nginx get svc ingress-nginx-controller
 ```
 
-For DuckDNS, copy the external IP or load balancer hostname from `ingress-nginx-controller` and point `propconnect07.duckdns.org` to it.
+For playground use, do not browse the MetalLB IP directly from your laptop. If you want to learn ingress routing, port-forward the ingress controller service and expose that port in the playground UI.
 
 ### 3. Metrics Server
 
@@ -354,7 +366,7 @@ kubectl -n propconnect create secret tls propconnect-tls \
   --key=privkey.pem
 ```
 
-For DuckDNS with cert-manager, you will also need an `Issuer` or `ClusterIssuer` configured for ACME/Let's Encrypt. DNS-01 is usually the cleanest option for dynamic DNS, while HTTP-01 can work if your ingress is already publicly reachable on port 80.
+If you use cert-manager with a real public domain, you will also need an `Issuer` or `ClusterIssuer` configured for ACME/Let's Encrypt. DNS-01 is usually the cleanest option for a public domain, while HTTP-01 can work if your ingress is already publicly reachable on port 80.
 
 ### 5. MetalLB
 
@@ -600,7 +612,7 @@ The script uses `ap-south-2` by default. Override `AWS_REGION` only if your secr
 
 Review these values before applying to a real cluster:
 
-- `propconnect07.duckdns.org` in `configmap.yaml` and `ingress.yaml`; this is already set for your DuckDNS domain
+- `FRONTEND_URL` in `configmap.yaml` if you want the frontend service to be reachable from a different browser origin; the current value is tuned for local port-forward access
 - `propconnect-secret-store` in `externalsecret.yaml` if your store has a different name
 - `ingressClassName: nginx` in `ingress.yaml` if your cluster uses another ingress class
 - `ingress-nginx` namespace selectors in `network-policy.yaml` if your ingress controller is in another namespace
@@ -637,12 +649,14 @@ kubectl -n propconnect get ingress
 
 ## Smoke Test
 
-Once DNS points to the ingress load balancer, test:
+If you are using the frontend port-forward path, test:
 
 ```bash
-curl -I https://propconnect07.duckdns.org/
-curl https://propconnect07.duckdns.org/api/health
+curl -I http://localhost:8080/
+curl http://localhost:8080/api/health
 ```
+
+If you are using the ingress path, test from the playground terminal against the exposed ingress URL or with `curl` to `http://127.0.0.1:8081/` after the ingress controller port-forward is running.
 
 Expected backend health response includes:
 
@@ -694,3 +708,6 @@ That made the forwarded port available to the Killercoda traffic URL, and the ap
 ```bash
 kubectl delete -k k8s/
 ```
+
+
+

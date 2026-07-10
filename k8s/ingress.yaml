@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/part-of: propconnect
   annotations:
     nginx.ingress.kubernetes.io/proxy-body-size: "1m"
-    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
 spec:
   ingressClassName: nginx
   rules:
@@ -28,3 +28,4 @@ spec:
                 name: propconnect-frontend
                 port:
                   name: http
+

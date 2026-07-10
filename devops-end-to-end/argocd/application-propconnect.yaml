@@ -4,7 +4,7 @@ metadata:
   name: propconnect
   namespace: argocd
 spec:
-  project: default
+  project: propconnect
   source:
     repoURL: https://github.com/pavansai-pashikanti07/propconnect.git
     targetRevision: feature

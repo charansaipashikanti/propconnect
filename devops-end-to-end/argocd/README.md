@@ -20,6 +20,13 @@ For this project, the usual flow is:
 2. Point Argo CD at the `k8s/` folder in that repo
 3. Let Argo CD sync the Kubernetes manifests into Killercoda
 
+## Files In This Folder
+
+- `install-argocd.sh` - installs Argo CD into the cluster
+- `project-propconnect.yaml` - defines the Argo CD project and limits it to this repo and namespace
+- `application-propconnect.yaml` - tells Argo CD what to deploy
+- `bootstrap-argocd.sh` - installs Argo CD, then applies the project and application in one run
+
 ## Install Argo CD In Killercoda
 
 Use the helper script from the repo root:
@@ -28,7 +35,13 @@ Use the helper script from the repo root:
 bash devops-end-to-end/argocd/install-argocd.sh
 ```
 
-If you want to do it manually, the script is doing the same thing: creating the namespace, applying the official Argo CD manifest, waiting for the core workloads, and optionally patching `argocd-server` into insecure mode for playground access.
+If you want the full reset-friendly flow, use the bootstrap script instead:
+
+```bash
+bash devops-end-to-end/argocd/bootstrap-argocd.sh
+```
+
+The bootstrap script installs Argo CD, creates the `propconnect` AppProject, and creates the `propconnect` Application that points to the `k8s/` folder.
 
 Wait until the pods are ready:
 
@@ -44,17 +57,9 @@ Start with the normal HTTPS port-forward:
 kubectl -n argocd port-forward --address 0.0.0.0 svc/argocd-server 8080:443
 ```
 
-Open:
-
-```text
-https://localhost:8080
-```
-
 If Killercoda shows a redirect loop or `ERR_TOO_MANY_REDIRECTS`, switch Argo CD to insecure mode for local learning.
 
-## Killercoda Redirect Fix
-
-Argo CD server can keep redirecting HTTP to HTTPS, which clashes with the Killercoda browser proxy. The local learning fix is:
+Patch the server:
 
 ```bash
 kubectl -n argocd patch deployment argocd-server --type=json -p='[
@@ -75,8 +80,6 @@ After that, forward the HTTP port instead of HTTPS:
 kubectl -n argocd port-forward --address 0.0.0.0 svc/argocd-server 8080:80
 ```
 
-Open the Killercoda 8080 browser URL again.
-
 ## Get The Initial Password
 
 ```bash
@@ -88,19 +91,33 @@ Login with:
 - username: `admin`
 - password: output from the command above
 
-## Create A PropConnect Application
+## Application Details
 
-Create a file called `application-propconnect.yaml` from the example in this folder and update:
+The application file in this folder points at:
 
-- `repoURL`
-- `targetRevision`
-- `path`
+- repoURL: `https://github.com/pavansai-pashikanti07/propconnect.git`
+- targetRevision: `feature`
+- path: `k8s`
+- namespace: `propconnect`
 
-Then apply it:
+The `propconnect` AppProject allows only that repo and that namespace, which is a good habit even in a lab.
+
+## What To Do After A Cluster Reset
+
+Because the playground refreshes, you should expect Argo CD and the app resources to disappear.
+
+After a reset, rerun:
 
 ```bash
-kubectl apply -f application-propconnect.yaml
+bash devops-end-to-end/argocd/bootstrap-argocd.sh
 ```
+
+That is the repeatable path:
+
+1. reinstall Argo CD
+2. recreate the project
+3. recreate the application
+4. let Argo CD sync the app from Git
 
 ## Why This Is Useful
 
@@ -121,6 +138,7 @@ Useful checks while Argo CD is starting:
 kubectl -n argocd get pods -w
 kubectl -n argocd get svc
 kubectl -n argocd logs deploy/argocd-server --tail=100
+kubectl -n argocd get app propconnect
 ```
 
 Use `8080:443` for HTTPS mode and `8080:80` after applying `--insecure`.
