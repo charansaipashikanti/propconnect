@@ -35,7 +35,18 @@ helm upgrade --install "$RELEASE_NAME" metallb/metallb \
   --namespace "$NAMESPACE" \
   --create-namespace
 
-log "Waiting for MetalLB pods to become ready"
+log "Waiting for MetalLB controller and speakers to become ready"
+kubectl -n "$NAMESPACE" rollout status deployment/metallb-controller --timeout=180s
+kubectl -n "$NAMESPACE" rollout status daemonset/metallb-speaker --timeout=180s
+
+log "Waiting for the webhook service to publish endpoints"
+for _ in {1..30}; do
+  if kubectl -n "$NAMESPACE" get endpoints metallb-webhook-service -o jsonpath='{.subsets[*].addresses[*].ip}' 2>/dev/null | grep -q .; then
+    break
+  fi
+  sleep 2
+done
+
 kubectl -n "$NAMESPACE" get pods
 
 log "Applying the Layer 2 address pool"
