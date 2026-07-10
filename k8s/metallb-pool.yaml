@@ -1,0 +1,19 @@
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: propconnect-pool
+  namespace: metallb-system
+spec:
+  # Replace this range with a free IP range from your lab network.
+  # It must not overlap with any existing node, pod, service, or router IPs.
+  addresses:
+    - 172.30.255.240-172.30.255.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: propconnect-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+    - propconnect-pool

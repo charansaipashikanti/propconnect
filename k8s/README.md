@@ -355,8 +355,36 @@ kubectl -n propconnect create secret tls propconnect-tls \
 ```
 
 For DuckDNS with cert-manager, you will also need an `Issuer` or `ClusterIssuer` configured for ACME/Let's Encrypt. DNS-01 is usually the cleanest option for dynamic DNS, while HTTP-01 can work if your ingress is already publicly reachable on port 80.
-## How AWS Authentication Works
 
+### 5. MetalLB
+
+MetalLB gives `LoadBalancer` services a real IP in bare-metal or playground clusters that do not have a cloud load balancer. In this project, it is the piece that turns the `ingress-nginx-controller` service from `EXTERNAL-IP: <pending>` into an address you can actually browse.
+
+Install it with the helper script:
+
+```bash
+bash k8s/install-metallb.sh
+```
+
+What the script does:
+
+1. Installs MetalLB into `metallb-system`.
+2. Applies `k8s/metallb-pool.yaml`, which defines the IP range MetalLB is allowed to hand out.
+3. Ensures the ingress controller service is a `LoadBalancer`.
+
+Verify:
+
+```bash
+kubectl -n metallb-system get pods
+kubectl -n metallb-system get ipaddresspool,l2advertisement
+kubectl -n ingress-nginx get svc ingress-nginx-controller -o wide
+```
+
+Important: `k8s/metallb-pool.yaml` contains a placeholder address range. Replace it with a free range from your lab or bare-metal network before using it for real. If the range conflicts with something else in the cluster, the ingress IP may never come up.
+
+If you are only using `kubectl port-forward`, MetalLB is not required. You need MetalLB when you want the ingress controller itself to expose a real IP without relying on a cloud provider.
+
+## How AWS Authentication Works
 You do not run `aws configure` inside the app pods or inside the External Secrets Operator pod.
 
 `aws configure` is only for your local machine when you are using the AWS CLI manually. Kubernetes needs its own AWS identity.
