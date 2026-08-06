@@ -1,0 +1,53 @@
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: propconnect-backend-ingress
+  namespace: propconnect
+  labels:
+    app.kubernetes.io/name: propconnect
+    app.kubernetes.io/component: backend
+    app.kubernetes.io/part-of: propconnect
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: propconnect
+      app.kubernetes.io/component: backend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: propconnect
+              app.kubernetes.io/component: frontend
+      ports:
+        - protocol: TCP
+          port: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: propconnect-frontend-ingress
+  namespace: propconnect
+  labels:
+    app.kubernetes.io/name: propconnect
+    app.kubernetes.io/component: frontend
+    app.kubernetes.io/part-of: propconnect
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: propconnect
+      app.kubernetes.io/component: frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: ingress-nginx
+      ports:
+        - protocol: TCP
+          port: 80

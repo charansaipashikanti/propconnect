@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: propconnect
+  namespace: argocd
+spec:
+  project: propconnect
+  source:
+    repoURL: https://github.com/pavansai-pashikanti07/propconnect.git
+    targetRevision: feature
+    path: k8s
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: propconnect
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

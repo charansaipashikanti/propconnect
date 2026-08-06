@@ -1,0 +1,81 @@
+namespace: propconnect
+nameOverride: ""
+fullnameOverride: ""
+
+image:
+  backend:
+    repository: pavansaipashikanti/propconnect-backend
+    tag: latest
+    pullPolicy: Always
+  frontend:
+    repository: pavansaipashikanti/propconnect-frontend
+    tag: latest
+    pullPolicy: Always
+
+config:
+  nodeEnv: development
+  backendPort: "5000"
+  frontendUrl: http://localhost:8080
+
+externalSecret:
+  enabled: true
+  name: propconnect-backend
+  targetName: propconnect-backend-secret
+  storeName: propconnect-secret-store
+  refreshInterval: 1h
+  remoteKey: propconnect/production/backend
+
+serviceAccount:
+  create: true
+  name: propconnect-app
+
+backend:
+  replicas: 2
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  replicas: 2
+  containerPort: 8080
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 256Mi
+
+ingress:
+  enabled: false
+  className: nginx
+  host: propconnect.local
+  tls:
+    enabled: true
+    secretName: propconnect-tls
+
+hpa:
+  enabled: true
+  backend:
+    minReplicas: 2
+    maxReplicas: 5
+    cpuAverageUtilization: 70
+    memoryAverageUtilization: 75
+  frontend:
+    minReplicas: 2
+    maxReplicas: 5
+    cpuAverageUtilization: 75
+
+pdb:
+  enabled: true
+
+limitRange:
+  enabled: true
+
+networkPolicy:
+  enabled: false
+  ingressNamespace: ingress-nginx
